@@ -23,6 +23,7 @@ param (
 #   11001 | Undefined error
 #   11002 | removed found software-version
 #   11003 | found previous version but could not identify uninstall-routine
+#	11004 | found software, but deinstallation was disabled
 #   11010 | Found Inno-setup but uninstall-exe was not found
 
 # ---- Debugging ----
@@ -62,73 +63,80 @@ function do_compare{
     # Compare installed version
     if ([System.Version]$_.DisplayVersion -lt [System.Version]"$version") {
 
-        # Debug info:
-        if ($DebugMessages -eq "1") {Write-Host "Found older version of" $_.DisplayName "(Given parameter version:" $version "> Installed version:" $_.DisplayVersion ")"}
+		# Debug info:
+		if ($DebugMessages -eq "1") {Write-Host "Found older version of" $_.DisplayName "(Given parameter version:" $version "> Installed version:" $_.DisplayVersion ")"}
 
-        # Checking uninstall-string type:
-        if ($_.UninstallString -match "MsiExec.exe") {
+		if($uninstall -eq "yes") {
+			
+			# Checking uninstall-string type:
+			if ($_.UninstallString -match "MsiExec.exe") {
 
-            ##------------------------------------------------------- MSI Uninstallation -------------------------------------------------------
-            # Debug info:
-            if ($DebugMessages -eq "1") {Write-Host "Found MSI-Uninstallstring."}
+				##------------------------------------------------------- MSI Uninstallation -------------------------------------------------------
+				# Debug info:
+				if ($DebugMessages -eq "1") {Write-Host "Found MSI-Uninstallstring."}
 
-            # Modify '/I' argument to '/X'
-            if ($_.UninstallString -match "MsiExec.exe /I") {
-                $_.UninstallString = $_.UninstallString -replace "/I","/X"
-                # Debug info:
-                if ($DebugMessages -eq "1") {Write-Host "Found MSI-UninstallString and replaced /I with /X - New UninstallString:" $_.UninstallString}
-            }
+				# Modify '/I' argument to '/X'
+				if ($_.UninstallString -match "MsiExec.exe /I") {
+					$_.UninstallString = $_.UninstallString -replace "/I","/X"
+					# Debug info:
+					if ($DebugMessages -eq "1") {Write-Host "Found MSI-UninstallString and replaced /I with /X - New UninstallString:" $_.UninstallString}
+				}
 
-            # Debug Info:
-            if ($DebugMessages -eq "1") {Write-Host "Found UninstallString and extracted the parameters:" $_.UninstallString}
+				# Debug Info:
+				if ($DebugMessages -eq "1") {Write-Host "Found UninstallString and extracted the parameters:" $_.UninstallString}
 
-            if ($_.UninstallString -match "MsiExec.exe /X") {
+				if ($_.UninstallString -match "MsiExec.exe /X") {
 
-                # Extract arguments to uninstall (We have to define arguments separated to use start-process)
-                $_.UninstallString = $_.UninstallString -replace "MsiExec.exe ",""
-                
-                Start-Process MsiExec.exe -wait -ArgumentList "$($_.UninstallString)","/qn","/log $env:Windir\Temp\UNINSTALLEDTHIS.log" -PassThru
-                if ($DebugMessages -eq "1") {Write-Host "Ran MsiExec.exe and got errorlevel:" $LASTEXITCODE}
-                
-                # Check returncode of msiexec. If it's not 0, exit this script.
-                if ($LASTEXITCODE -ne "0") { exit $LASTEXITCODE } else {return;}
-            }
-            ##------------------------------------------------------- End MSI Uninstallation ----------------------------------------------------
+					# Extract arguments to uninstall (We have to define arguments separated to use start-process)
+					$_.UninstallString = $_.UninstallString -replace "MsiExec.exe ",""
+					
+					Start-Process MsiExec.exe -wait -ArgumentList "$($_.UninstallString)","/qn","/log $env:Windir\Temp\UNINSTALLEDTHIS.log" -PassThru
+					if ($DebugMessages -eq "1") {Write-Host "Ran MsiExec.exe and got errorlevel:" $LASTEXITCODE}
+					
+					# Check returncode of msiexec. If it's not 0, exit this script.
+					if ($LASTEXITCODE -ne "0") { exit $LASTEXITCODE } else {return;}
+				}
+				##------------------------------------------------------- End MSI Uninstallation ----------------------------------------------------
 
-        } elseif ($_.UninstallString -match "unins000.exe") {
+			} 	elseif ($_.UninstallString -match "unins000.exe") {
 
-            ##------------------------------------------------------- Inno Uninstallation -------------------------------------------------------
-            # Debug info:
-            if ($DebugMessages -eq "1") {Write-Host "Found Inno-Setup uninstallation"}
-            
-            # Check if uninstallation file still exists:
-            # Test-Path does not like quotes, so we will trim them and save the path into a new variable:
-            $InnoFilePath=$_.UninstallString.Replace("`"","")
+					##------------------------------------------------------- Inno Uninstallation -------------------------------------------------------
+					# Debug info:
+					if ($DebugMessages -eq "1") {Write-Host "Found Inno-Setup uninstallation"}
+					
+					# Check if uninstallation file still exists:
+					# Test-Path does not like quotes, so we will trim them and save the path into a new variable:
+					$InnoFilePath=$_.UninstallString.Replace("`"","")
 
+					# Debug info:
+					if ($DebugMessages -eq "1") {Write-Host "Uninstallation activated via arguments"}
+					if (Test-Path -Path $InnoFilePath) {
+						# Debug info:
+						if ($DebugMessages -eq "1") {Write-Host "Inno-Setup-File exists in" $_.UninstallString }
 
-            if($uninstall -eq "yes") {
-                # Debug info:
-                if ($DebugMessages -eq "1") {Write-Host "Uninstallation activated via arguments"}
-                if(Test-Path -Path $InnoFilePath) {
-                    # Debug info:
-                    if ($DebugMessages -eq "1") {Write-Host "Inno-Setup-File exists in" $_.UninstallString }
+						Start-Process "$InnoFilePath" -ArgumentList "/VERYSILENT","/SUPPRESSMSGBOXES","/LOG=$env:Windir\Temp\UNINSTALLEDTHIS.log"
+						# Check returncode of uninstallation-file. If it's not 0, exit this script.
+						if ($LASTEXITCODE -ne "0") { exit $LASTEXITCODE } else {return;}
+					} else {
+						# Debug info:
+						if ($DebugMessages -eq "1") {Write-Host "Could not find Inno-Setup-File in" $_.UninstallString }
+						exit 11010
+					}
+					
+				##------------------------------------------------------- End Inno Uninstallation -------------------------------------------------------
+			} 	else {
+					# Debug info:
+					if ($DebugMessages -eq "1") {Write-Host "Found old version of software but could not identify uninstallation-routine" }
+					exit 11003
+				}
 
-                    Start-Process "$InnoFilePath" -ArgumentList "/VERYSILENT","/SUPPRESSMSGBOXES","/LOG=$env:Windir\Temp\UNINSTALLEDTHIS.log"
-                    # Check returncode of uninstallation-file. If it's not 0, exit this script.
-                    if ($LASTEXITCODE -ne "0") { exit $LASTEXITCODE } else {return;}
-                }
-            } else {
-                # Debug info:
-                if ($DebugMessages -eq "1") {Write-Host "Could not find Inno-Setup-File in" $_.UninstallString }
-                exit 11010
-            }
-
-            ##------------------------------------------------------- End Inno Uninstallation -------------------------------------------------------
-        } else {
-            # Debug info:
-            if ($DebugMessages -eq "1") {Write-Host "Found old version of software but could not identify uninstallation-routine" }
-            exit 11003
-        }
+		} else {
+			# Debug info:
+			if ($DebugMessages -eq "1") {Write-Host "Found software - Uninstallation disabled via arguments." }
+			exit 11004
+		}
+			
+			
     } else {
         # Debug info:
         if ($DebugMessages -eq "1") {Write-Host "No older version of" $_.DisplayName "found. (Given parameter version:" $version " - Installed version:" $_.DisplayVersion ")"}
