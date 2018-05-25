@@ -90,7 +90,7 @@ function do_compare{
 					# Extract arguments to uninstall (We have to define arguments separated to use start-process)
 					$_.UninstallString = $_.UninstallString -replace "MsiExec.exe ",""
 					
-					Start-Process MsiExec.exe -wait -ArgumentList "$($_.UninstallString)","/qn","/log $env:Windir\Temp\UNINSTALLEDTHIS.log" -PassThru
+					Start-Process MsiExec.exe -wait -ArgumentList "$($_.UninstallString)","/qn","/log $env:Windir\Temp\Uninstalled_$_.Displayname.log" -PassThru
                     $exitcode = $LASTEXITCODE
 					if ($DebugMessages -eq "1") {Write-Host "Ran MsiExec.exe and got errorlevel:" $exitcode}
 					
@@ -115,7 +115,7 @@ function do_compare{
 						# Debug info:
 						if ($DebugMessages -eq "1") {Write-Host "Inno-Setup-File exists in" $_.UninstallString }
 
-						Start-Process "$InnoFilePath" -ArgumentList "/VERYSILENT","/SUPPRESSMSGBOXES","/LOG=$env:Windir\Temp\UNINSTALLEDTHIS.log"
+						Start-Process "$InnoFilePath" -ArgumentList "/VERYSILENT","/SUPPRESSMSGBOXES","/LOG=$env:Windir\Temp\Uninstalled_$_.Displayname.log"
 						# Check returncode of uninstallation-file. If it's not 0, exit this script.
 						if ($LASTEXITCODE -ne "0") { exit $LASTEXITCODE } else {return;}
 					} else {
