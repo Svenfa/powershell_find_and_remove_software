@@ -24,6 +24,7 @@ param (
 #   11002 | removed found software-version
 #   11003 | found previous version but could not identify uninstall-routine
 #	11004 | found software, but deinstallation was disabled
+#	11005 | found software, but in recent version
 #   11010 | Found Inno-setup but uninstall-exe was not found
 
 # ---- Debugging ----
@@ -153,8 +154,8 @@ function do_compare{
 			
     } else {
         # Debug info:
-        if ($DebugMessages -eq "1") {Write-Host "No older version of" $_.DisplayName "found. (Given parameter version:" $version " - Installed version:" $_.DisplayVersion ")"}
-        exit 11000
+        if ($Debugessages -eq "1") {Write-Host "No older version of" $_.DisplayName "found. (Given parameter version:" $version " - Installed version:" $_.DisplayVersion ")"}
+        exit 11005
     }
 
     # Debug info:
