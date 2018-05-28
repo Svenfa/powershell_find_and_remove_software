@@ -166,14 +166,22 @@ function do_compare{
 #
 #
 # -------------------------------------------------------------------- Tasks  -------------------------------------------------------------
+$counter=0
 # Search 32-Bit Software
 Get-ItemProperty HKLM:\Software\Wow6432Node\Microsoft\Windows\CurrentVersion\Uninstall\* | Where-Object {$_.DisplayName -like "*$software*"} | ForEach-Object -process { 
-   do_compare
+    do_compare
+    $counter++
 }
 
 # 64-Bit Software
 Get-ItemProperty HKLM:\Software\Microsoft\Windows\CurrentVersion\Uninstall\* | Where-Object {$_.DisplayName -like "*$software*"} | ForEach-Object -process { 
-   do_compare
+    do_compare
+    $counter++
+}
+
+if ( $counter -ne 0 ) {
+    if ($Debugessages -eq "1") {Write-Host "No version of" $_.DisplayName "found."}
+    exit 11000
 }
 
 endscript
