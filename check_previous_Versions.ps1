@@ -166,6 +166,7 @@ function do_compare{
 #
 #
 # -------------------------------------------------------------------- Tasks  -------------------------------------------------------------
+# Initiate $counter-Variable
 $counter=0
 # Search 32-Bit Software
 Get-ItemProperty HKLM:\Software\Wow6432Node\Microsoft\Windows\CurrentVersion\Uninstall\* | Where-Object {$_.DisplayName -like "*$software*"} | ForEach-Object -process { 
