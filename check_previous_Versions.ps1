@@ -95,7 +95,20 @@ function do_compare{
 					if ($DebugMessages -eq "1") {Write-Host "Ran MsiExec.exe and got errorlevel:" $exitcode}
 					
 					# Check returncode of msiexec. If it's not 0, exit this script.
-					if ($exitcode -ne "0") { exit $exitcode } else {return;}
+					if ($exitcode -ne "0") {
+                        if ( $exitcode -eq "3010" ) {
+                                return;
+                        }
+                        if ( $exitcode -eq "XXXX" ) {
+                                return;
+                        }
+                        if ( $exitcode -eq "YYYY" ) {
+                                return;
+                        }
+                        exit $exitcode 
+                    } else {
+                        return;
+                    }
 				}
 				##------------------------------------------------------- End MSI Uninstallation ----------------------------------------------------
 
