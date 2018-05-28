@@ -164,7 +164,7 @@ function do_compare{
 			if ($DebugMessages -eq "1") {Write-Host "Found software - Uninstallation disabled via arguments." }
 			exit 11004
 		}
-			
+
 			
     } else {
         # Debug info:
@@ -195,12 +195,8 @@ Get-ItemProperty HKLM:\Software\Microsoft\Windows\CurrentVersion\Uninstall\* | W
     $counter++
 }
 
-if ( $counter -ne 0 ) {
-<<<<<<< HEAD
+if ( $counter -eq 0 ) {
     if ($DebugMessages -eq "0") {Write-Host "No version of" $_.DisplayName "found." | Out-File -FilePath C:\temp\MYFILE.log -Append}
-=======
-    if ($DebugMessages -eq "1") {Write-Host "No version of" $_.DisplayName "found." | Out-File -FilePath C:\temp\MYFILE.log -Append}
->>>>>>> f12b560cfb77e036b0844ce8f14e42531a0d8c17
     exit 11000
 }
 
