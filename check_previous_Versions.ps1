@@ -13,7 +13,8 @@ param (
     [string]$software = "",
     [string]$version = "0.0",
     [string]$uninstall = "no",
-    [int]$debug = 0
+    [int]$debug = 0,
+    [string]$OutputFileLocation = "$env:Temp\check_previous_Versions_debug_output_$(get-date -f yyyy.MM.dd-H.m).log"
 )
 
 # ---- Exit Codes ----
@@ -33,6 +34,16 @@ param (
 Set-PSDebug -Trace 0
 # Enable Debug-Write-Host-Messages:
 $DebugMessages = $debug
+#
+# Send all Write-Host messages to console and to the file defined in $OutputFileLocation
+if ($DebugMessages -eq "1") {
+    # Stop transcript - just in case it's running in another PS-Script:
+    $ErrorActionPreference="SilentlyContinue"
+    Stop-Transcript | out-null
+    # Start transcript of all output into a file:
+    $ErrorActionPreference = "Continue"
+    Start-Transcript -path $OutputFileLocation -append
+}
 
 # ------------------------------------------------------- End definition of environment ---------------------------------------------------
 
@@ -41,7 +52,10 @@ $DebugMessages = $debug
 
 function endscript{
     # Debug info:
+    if ($DebugMessages -eq "1") {Write-Host "Result is exitcode:" $exitcode }
     if ($DebugMessages -eq "1") {Write-Host "End of script"}
+    if ($DebugMessages -eq "1") {Stop-Transcript}
+    exit $exitcode
     }
 
 # Define what to do with found entries. Put it into a function so it can be called for 32 and 64-bit searches
@@ -154,8 +168,9 @@ function do_compare{
 			
     } else {
         # Debug info:
-        if ($Debugessages -eq "1") {Write-Host "No older version of" $_.DisplayName "found. (Given parameter version:" $version " - Installed version:" $_.DisplayVersion ")"}
-        exit 11005
+        if ($DebugMessages -eq "1") {Write-Host "No older version of" $_.DisplayName "found. (Given parameter version:" $version " - Installed version:" $_.DisplayVersion ")"}
+        $exitcode=11005
+        endscript
     }
 
     # Debug info:
@@ -181,7 +196,7 @@ Get-ItemProperty HKLM:\Software\Microsoft\Windows\CurrentVersion\Uninstall\* | W
 }
 
 if ( $counter -ne 0 ) {
-    if ($Debugessages -eq "1") {Write-Host "No version of" $_.DisplayName "found."}
+    if ($DebugMessages -eq "1") {Write-Host "No version of" $_.DisplayName "found." | Out-File -FilePath C:\temp\MYFILE.log -Append}
     exit 11000
 }
 
