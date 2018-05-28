@@ -41,7 +41,7 @@ $DebugMessages = $debug
 
 function endscript{
     # Debug info:
-    if ($DebugMessages -eq "1") {Write-Host "End of script"}
+    if ($Debugmessages -eq "1") {Write-Host "End of script"}
     }
 
 # Define what to do with found entries. Put it into a function so it can be called for 32 and 64-bit searches
@@ -53,10 +53,10 @@ function do_compare{
     # Check if found software is matrix-package:
     if ("$_." -like "*Setup.inf*") { 
         # Debug info:
-        if ($DebugMessages -eq "1") {Write-Host "This is a matrix package entry and not the installed software `nSkipping it."}
+        if ($Debugmessages -eq "1") {Write-Host "This is a matrix package entry and not the installed software `nSkipping it."}
 
         # Debug info:
-        if ($DebugMessages -eq "1") {Write-Host "--- End of loop ---`n"}
+        if ($Debugmessages -eq "1") {Write-Host "--- End of loop ---`n"}
         # Skip this found software and exit the function (but not the whole script)
         return;
     }
@@ -65,7 +65,7 @@ function do_compare{
     if ([System.Version]$_.DisplayVersion -lt [System.Version]"$version") {
 
 		# Debug info:
-		if ($DebugMessages -eq "1") {Write-Host "Found older version of" $_.DisplayName "(Given parameter version:" $version "> Installed version:" $_.DisplayVersion ")"}
+		if ($Debugmessages -eq "1") {Write-Host "Found older version of" $_.DisplayName "(Given parameter version:" $version "> Installed version:" $_.DisplayVersion ")"}
 
 		if($uninstall -eq "yes") {
 			
@@ -74,17 +74,17 @@ function do_compare{
 
 				##------------------------------------------------------- MSI Uninstallation -------------------------------------------------------
 				# Debug info:
-				if ($DebugMessages -eq "1") {Write-Host "Found MSI-Uninstallstring."}
+				if ($Debugmessages -eq "1") {Write-Host "Found MSI-Uninstallstring."}
 
 				# Modify '/I' argument to '/X'
 				if ($_.UninstallString -match "MsiExec.exe /I") {
 					$_.UninstallString = $_.UninstallString -replace "/I","/X"
 					# Debug info:
-					if ($DebugMessages -eq "1") {Write-Host "Found MSI-UninstallString and replaced /I with /X - New UninstallString:" $_.UninstallString}
+					if ($Debugmessages -eq "1") {Write-Host "Found MSI-UninstallString and replaced /I with /X - New UninstallString:" $_.UninstallString}
 				}
 
 				# Debug Info:
-				if ($DebugMessages -eq "1") {Write-Host "Found UninstallString and extracted the parameters:" $_.UninstallString}
+				if ($Debugmessages -eq "1") {Write-Host "Found UninstallString and extracted the parameters:" $_.UninstallString}
 
 				if ($_.UninstallString -match "MsiExec.exe /X") {
 
@@ -93,7 +93,7 @@ function do_compare{
 					
 					Start-Process MsiExec.exe -wait -ArgumentList "$($_.UninstallString)","/qn","/log $env:Windir\Temp\Uninstalled_$_.Displayname.log" -PassThru
                     $exitcode = $LASTEXITCODE
-					if ($DebugMessages -eq "1") {Write-Host "Ran MsiExec.exe and got errorlevel:" $exitcode}
+					if ($Debugmessages -eq "1") {Write-Host "Ran MsiExec.exe and got errorlevel:" $exitcode}
 					
 					# Check returncode of msiexec. If it's not 0, exit this script.
 					if ($exitcode -ne "0") {
@@ -117,49 +117,49 @@ function do_compare{
 
 					##------------------------------------------------------- Inno Uninstallation -------------------------------------------------------
 					# Debug info:
-					if ($DebugMessages -eq "1") {Write-Host "Found Inno-Setup uninstallation"}
+					if ($Debugmessages -eq "1") {Write-Host "Found Inno-Setup uninstallation"}
 					
 					# Check if uninstallation file still exists:
 					# Test-Path does not like quotes, so we will trim them and save the path into a new variable:
 					$InnoFilePath=$_.UninstallString.Replace("`"","")
 
 					# Debug info:
-					if ($DebugMessages -eq "1") {Write-Host "Uninstallation activated via arguments"}
+					if ($Debugmessages -eq "1") {Write-Host "Uninstallation activated via arguments"}
 					if (Test-Path -Path $InnoFilePath) {
 						# Debug info:
-						if ($DebugMessages -eq "1") {Write-Host "Inno-Setup-File exists in" $_.UninstallString }
+						if ($Debugmessages -eq "1") {Write-Host "Inno-Setup-File exists in" $_.UninstallString }
 
 						Start-Process "$InnoFilePath" -ArgumentList "/VERYSILENT","/SUPPRESSMSGBOXES","/LOG=$env:Windir\Temp\Uninstalled_$_.Displayname.log"
 						# Check returncode of uninstallation-file. If it's not 0, exit this script.
 						if ($LASTEXITCODE -ne "0") { exit $LASTEXITCODE } else {return;}
 					} else {
 						# Debug info:
-						if ($DebugMessages -eq "1") {Write-Host "Could not find Inno-Setup-File in" $_.UninstallString }
+						if ($Debugmessages -eq "1") {Write-Host "Could not find Inno-Setup-File in" $_.UninstallString }
 						exit 11010
 					}
 					
 				##------------------------------------------------------- End Inno Uninstallation -------------------------------------------------------
 			} 	else {
 					# Debug info:
-					if ($DebugMessages -eq "1") {Write-Host "Found old version of software but could not identify uninstallation-routine" }
+					if ($Debugmessages -eq "1") {Write-Host "Found old version of software but could not identify uninstallation-routine" }
 					exit 11003
 				}
 
 		} else {
 			# Debug info:
-			if ($DebugMessages -eq "1") {Write-Host "Found software - Uninstallation disabled via arguments." }
+			if ($Debugmessages -eq "1") {Write-Host "Found software - Uninstallation disabled via arguments." }
 			exit 11004
 		}
 			
 			
     } else {
         # Debug info:
-        if ($Debugessages -eq "1") {Write-Host "No older version of" $_.DisplayName "found. (Given parameter version:" $version " - Installed version:" $_.DisplayVersion ")"}
+        if ($Debugmessages -eq "1") {Write-Host "No older version of" $_.DisplayName "found. (Given parameter version:" $version " - Installed version:" $_.DisplayVersion ")"}
         exit 11005
     }
 
     # Debug info:
-    if ($DebugMessages -eq "1") {Write-Host "--- End of loop ---`n"}
+    if ($Debugmessages -eq "1") {Write-Host "--- End of loop ---`n"}
 
 }
 # ------------------------------------------------------- End definition of functions ---------------------------------------------------
@@ -181,7 +181,7 @@ Get-ItemProperty HKLM:\Software\Microsoft\Windows\CurrentVersion\Uninstall\* | W
 }
 
 if ( $counter -ne 0 ) {
-    if ($Debugessages -eq "1") {Write-Host "No version of" $_.DisplayName "found."}
+    if ($Debugmessages -eq "1") {Write-Host "No version of" $_.DisplayName "found." | Out-File -FilePath C:\temp\MYFILE.log -Append}
     exit 11000
 }
 
