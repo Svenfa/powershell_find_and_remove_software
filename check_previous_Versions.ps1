@@ -52,7 +52,6 @@ if ($DebugMessages -eq "1") {
 
 function endscript{
     # Debug info:
-    if ($DebugMessages -eq "1") {Write-Host "Result is exitcode:" $exitcode }
     if ($DebugMessages -eq "1") {Write-Host "End of script"}
     if ($DebugMessages -eq "1") {Stop-Transcript}
     exit $exitcode
@@ -62,7 +61,8 @@ function endscript{
 function do_compare{
 
     # Debug info:
-    if ($DebugMessages -eq 1) {Write-Host "--- Beginning of loop ---`nFound" $_.DisplayName "in version" $_.DisplayVersion}
+    if ($DebugMessages -eq 1) {Write-Host "--- Beginning of loop ---"}
+    if ($DebugMessages -eq 1) {Write-Host "Found" $_.DisplayName "in version" $_.DisplayVersion"}
 
     # Check if found software is matrix-package:
     if ("$_." -like "*Setup.inf*") { 
