@@ -53,7 +53,7 @@ if ($DebugMessages -eq "1") {
 
 function endscript{
     # Debug info:
-    if ($DebugMessages -eq "1") {Write-Host "End of script"}
+    if ($DebugMessages -eq "1") {Write-Host "End of script - Exitcode" $exitcode}
     if ($DebugMessages -eq "1") {Stop-Transcript}
     exit $exitcode
     }
