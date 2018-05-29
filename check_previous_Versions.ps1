@@ -106,6 +106,7 @@ function do_compare{
 					$_.UninstallString = $_.UninstallString -replace "MsiExec.exe ",""
 					
 					Start-Process MsiExec.exe -wait -ArgumentList "$($_.UninstallString)","/qn","/log $env:Windir\Temp\Uninstalled_$_.Displayname.log" -PassThru
+                    # Set exitcode to keep the variable ($LASTEXITCODE can be overwritten by any other process, if-clause etc. that ran)
                     $exitcode = $LASTEXITCODE
 					if ($DebugMessages -eq "1") {Write-Host "Ran MsiExec.exe and got errorlevel:" $exitcode}
 					
