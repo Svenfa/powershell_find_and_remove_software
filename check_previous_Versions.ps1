@@ -88,7 +88,7 @@ function do_compare{
 
 				##------------------------------------------------------- MSI Uninstallation -------------------------------------------------------
 				# Debug info:
-				if ($DebugMessages -eq "1") {Write-Host "Found MSI-Uninstallstring."}
+				if ($DebugMessages -eq "1") {Write-Host "Found MSI-Uninstallstring:" $_.UninstallString}
 
 				# Modify '/I' argument to '/X'
 				if ($_.UninstallString -match "MsiExec.exe /I") {
@@ -105,12 +105,17 @@ function do_compare{
 					# Extract arguments to uninstall (We have to define arguments separated to use start-process)
 					$_.UninstallString = $_.UninstallString -replace "MsiExec.exe ",""
 					
-					Start-Process MsiExec.exe -wait -ArgumentList "$($_.UninstallString)","/qn","/log $env:Windir\Temp\Uninstalled_$_.Displayname.log" -PassThru
+				    # Debug Info:
+				    if ($DebugMessages -eq "1") {Write-Host "Modified UninstallString and extracted the parameters:" $_.UninstallString}
+
+                    # Prepare displayname-variable for usage as logfile by removing all spaces (cannot use spaces because we cannot quoted parameters inside quoted parameters for start-process)
+                    $tmpDPN=$($_.DisplayName) -replace " ",""
+					$uninstallprocess = Start-Process MsiExec.exe -wait -ArgumentList "$($_.UninstallString)","/qn","/log $env:Windir\Temp\Uninstalled_$tmpDPN.log" -PassThru
                     # Set exitcode to keep the variable ($LASTEXITCODE can be overwritten by any other process, if-clause etc. that ran)
-                    $exitcode = $LASTEXITCODE
+                    $exitcode = $uninstallprocess.ExitCode
 					if ($DebugMessages -eq "1") {Write-Host "Ran MsiExec.exe and got errorlevel:" $exitcode}
 					
-					# Check returncode of msiexec. If it's not 0, exit this script.
+					# Check returncode of msiexec. If it's not 0 or 3010, exit this script.
 					if ($exitcode -ne "0") {
                         if ( $exitcode -eq "3010" ) {
                                 return;
