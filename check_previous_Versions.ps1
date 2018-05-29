@@ -108,13 +108,13 @@ function do_compare{
 				    # Debug Info:
 				    if ($DebugMessages -eq "1") {Write-Host "Modified UninstallString and extracted the parameters:" $_.UninstallString}
 
-                    # Prepare displayname-variable for usage as logfile by removing all spaces (cannot use spaces because we cannot quoted parameters inside quoted parameters for start-process)
+                    # Prepare displayname-variable for usage as logfile by removing all spaces (cannot use spaces because we cannot use quoted parameters inside quoted parameters for start-process)
                     $tmpDPN=$($_.DisplayName) -replace " ",""
 					$uninstallprocess = Start-Process MsiExec.exe -wait -ArgumentList "$($_.UninstallString)","/qn","/log $env:Windir\Temp\Uninstalled_$tmpDPN.log" -PassThru
-                    # Set exitcode to keep the variable ($LASTEXITCODE can be overwritten by any other process, if-clause etc. that ran)
+                    # Run $uninstallprocess and set exitcode to keep the variable
                     $exitcode = $uninstallprocess.ExitCode
 					if ($DebugMessages -eq "1") {Write-Host "Ran MsiExec.exe and got errorlevel:" $exitcode}
-					
+
 					# Check returncode of msiexec. If it's not 0 or 3010, exit this script.
 					if ($exitcode -ne "0") {
                         if ( $exitcode -eq "3010" ) {
@@ -135,7 +135,7 @@ function do_compare{
 
 			} 	elseif ($_.UninstallString -match "unins000.exe") {
 
-					##------------------------------------------------------- Inno Uninstallation -------------------------------------------------------
+					##------------------------------------------------------- InstallShield Uninstallation -------------------------------------------------------
 					# Debug info:
 					if ($DebugMessages -eq "1") {Write-Host "Found Inno-Setup uninstallation"}
 					
@@ -149,16 +149,17 @@ function do_compare{
 						# Debug info:
 						if ($DebugMessages -eq "1") {Write-Host "Inno-Setup-File exists in" $_.UninstallString }
 
-						Start-Process "$InnoFilePath" -ArgumentList "/VERYSILENT","/SUPPRESSMSGBOXES","/LOG=$env:Windir\Temp\Uninstalled_$_.Displayname.log"
-						# Check returncode of uninstallation-file. If it's not 0, exit this script.
-						if ($LASTEXITCODE -ne "0") { exit $LASTEXITCODE } else {return;}
+						$uninstallprocess = Start-Process "$InnoFilePath" -ArgumentList "/VERYSILENT","/SUPPRESSMSGBOXES","/LOG=$env:Windir\Temp\Uninstalled_$_.Displayname.log"
+                        # Run $uninstallprocess and set exitcode to keep the variable
+                        $exitcode = $uninstallprocess.ExitCode
+						if ($exitcode -ne "0") { exit $exitcode } else {return;}
 					} else {
 						# Debug info:
-						if ($DebugMessages -eq "1") {Write-Host "Could not find Inno-Setup-File in" $_.UninstallString }
+						if ($DebugMessages -eq "1") {Write-Host "Could not find Uninstallation-Setup in" $_.UninstallString }
 						exit 11010
 					}
-					
-				##------------------------------------------------------- End Inno Uninstallation -------------------------------------------------------
+
+				##------------------------------------------------------- End InstallShield Uninstallation -------------------------------------------------------
 			} 	else {
 					# Debug info:
 					if ($DebugMessages -eq "1") {Write-Host "Found old version of software but could not identify uninstallation-routine" }
