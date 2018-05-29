@@ -25,8 +25,9 @@ param (
 #   11002 | removed found software-version
 #   11003 | found previous version but could not identify uninstall-routine
 #	11004 | found software, but deinstallation was disabled
-#	11005 | found software, but in recent version
-#   11010 | Found Inno-setup but uninstall-exe was not found
+#	11005 | found software, but deinstallation failed
+#	11006 | found software, but in recent version
+#   11010 | Found Installshield-setup but uninstall-exe was not found
 
 # ---- Debugging ----
 # Enable debugging (1) or disable (0)
@@ -116,20 +117,27 @@ function do_compare{
 					if ($DebugMessages -eq "1") {Write-Host "Ran MsiExec.exe and got errorlevel:" $exitcode}
 
 					# Check returncode of msiexec. If it's not 0 or 3010, exit this script.
-					if ($exitcode -ne "0") {
-                        if ( $exitcode -eq "3010" ) {
-                                return;
+                    # Check exitcode and quit script
+                    switch ( $exitcode ) {
+                        0 { 
+                            # Debug Info:
+                            if ($DebugMessages -eq "1") {Write-Host "Uninstalled" $_.DisplayName "successfully."}
+                            $exitcode=11002
+                            endscript
                         }
-                        if ( $exitcode -eq "XXXX" ) {
-                                return;
+                        3010 {
+                            # Debug Info:
+                            if ($DebugMessages -eq "1") {Write-Host "Uninstalled" $_.DisplayName "successfully but need reboot."}
+                            $exitcode=11002
+                            endscript
                         }
-                        if ( $exitcode -eq "YYYY" ) {
-                                return;
-                        }
-                        exit $exitcode 
-                    } else {
-                        return;
                     }
+                    # Debug Info:
+				    if ($DebugMessages -eq "1") {Write-Host "Uninstallation of" $_.DisplayName "failed. MSI-Uninstallation returncode is:" $exitcode}
+                    # If none of the obove exitcodes apply, somthing went wrong and this script quits.
+                    $exitcode=11005
+                    endscript
+
 				}
 				##------------------------------------------------------- End MSI Uninstallation ----------------------------------------------------
 
@@ -152,31 +160,55 @@ function do_compare{
 						$uninstallprocess = Start-Process "$InnoFilePath" -ArgumentList "/VERYSILENT","/SUPPRESSMSGBOXES","/LOG=$env:Windir\Temp\Uninstalled_$_.Displayname.log"
                         # Run $uninstallprocess and set exitcode to keep the variable
                         $exitcode = $uninstallprocess.ExitCode
-						if ($exitcode -ne "0") { exit $exitcode } else {return;}
+
+                        # Check exitcode and quit script
+                        switch ( $exitcode ) {
+                            0 { 
+                                # Debug Info:
+                                if ($DebugMessages -eq "1") {Write-Host "Uninstalled" $_.DisplayName "successfully."}
+                                $exitcode=11002
+                                endscript
+                            }
+                            #XXXXX {
+                            #    # Debug Info:
+                            #    if ($DebugMessages -eq "1") {Write-Host "placeholder"}
+                            #    $exitcode=11002
+                            #    endscript
+                            #}
+                        }
+                        # Debug Info:
+				        if ($DebugMessages -eq "1") {Write-Host "Uninstallation of" $_DisplayName "failed. InstallShield-Uninstallation returncode is:" $exitcode}
+                        # If none of the obove exitcodes apply, somthing went wrong and this script quits.
+                        $exitcode=11005
+                        endscript
+
 					} else {
 						# Debug info:
 						if ($DebugMessages -eq "1") {Write-Host "Could not find Uninstallation-Setup in" $_.UninstallString }
-						exit 11010
+						$exitcode=11010
+                        endscript
 					}
 
 				##------------------------------------------------------- End InstallShield Uninstallation -------------------------------------------------------
 			} 	else {
 					# Debug info:
 					if ($DebugMessages -eq "1") {Write-Host "Found old version of software but could not identify uninstallation-routine" }
-					exit 11003
+					$exitcode=11003
+                    endscript
 				}
 
 		} else {
 			# Debug info:
 			if ($DebugMessages -eq "1") {Write-Host "Found software - Uninstallation disabled via arguments." }
-			exit 11004
+			$exitcode=11004
+            endscript
 		}
 
 			
     } else {
         # Debug info:
         if ($DebugMessages -eq "1") {Write-Host "No older version of" $_.DisplayName "found. (Given parameter version:" $version " - Installed version:" $_.DisplayVersion ")"}
-        $exitcode=11005
+        $exitcode=11006
         endscript
     }
 
@@ -204,7 +236,8 @@ Get-ItemProperty HKLM:\Software\Microsoft\Windows\CurrentVersion\Uninstall\* | W
 
 if ( $counter -eq 0 ) {
     if ($DebugMessages -eq "0") {Write-Host "No version of" $_.DisplayName "found." | Out-File -FilePath C:\temp\MYFILE.log -Append}
-    exit 11000
+        $exitcode=11000
+        endscript
 }
 
 endscript
