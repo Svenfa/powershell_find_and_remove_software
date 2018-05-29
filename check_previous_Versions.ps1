@@ -16,7 +16,6 @@ param (
     [int]$debug = 0,
     [string]$OutputFileLocation = "$env:Temp\check_previous_Versions_debug_output_$(get-date -f yyyy.MM.dd-H.m).log"
 )
-
 # ---- Exit Codes ----
 # Setup-routines will exit with their own exit-codes.
 # Define some custom exit-codes for this script.
@@ -45,6 +44,15 @@ if ($DebugMessages -eq "1") {
     $ErrorActionPreference = "Continue"
     Start-Transcript -path $OutputFileLocation -append
 }
+
+# ---- Manage versionnumber ----
+if ( $version -notlike "*.*") { 
+    # Debug info:
+    if ($DebugMessages -eq "1") {Write-Host "We need a point for our version-comparison. Changed" $version "to" $version".0"}
+    $version = $version+".0"
+    exit
+    }
+
 
 # ------------------------------------------------------- End definition of environment ---------------------------------------------------
 
