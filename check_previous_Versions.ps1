@@ -62,7 +62,7 @@ function do_compare{
 
     # Debug info:
     if ($DebugMessages -eq 1) {Write-Host "--- Beginning of loop ---"}
-    if ($DebugMessages -eq 1) {Write-Host "Found" $_.DisplayName "in version" $_.DisplayVersion"}
+    if ($DebugMessages -eq 1) {Write-Host "Found" $_.DisplayName "in version" $_.DisplayVersion}
 
     # Check if found software is matrix-package:
     if ("$_." -like "*Setup.inf*") { 
