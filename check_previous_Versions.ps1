@@ -1,10 +1,5 @@
 # Written by Sven Falk - 23~25 of May 2018
 # Description: This script will search for installed Software and is able to remove it if a correct uninstall string is found in the registry
-# ------ ToDo:
-# - Return Exitcodes of MSI to Matrix-Package for better handling?
-# - Return Errormessages to Matrix-Package for better log-entries in Empirum
-# - Search for software after uninstallation to make sure uninstallation was successful
-# - No correct way to return 11000 - need info if NO software was found
 # ------------------------------------------------------- Define environment -------------------------------------------------------
 # Param has to be the first line!
 # Defines the parameters which are given by calling this script:
