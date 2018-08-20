@@ -1,5 +1,5 @@
 # Written by Sven Falk - 23~25 of May 2018
-# Description: This script will search for installed Software and is able to remove it if a correct uninstall string is found in the registry
+# Description: This script will search for installed software and is able to remove it if a correct uninstall string is found in the registry
 # ------------------------------------------------------- Define environment -------------------------------------------------------
 # Param has to be the first line!
 # Defines the parameters which are given by calling this script:
@@ -45,7 +45,6 @@ if ( $version -notlike "*.*") {
     # Debug info:
     if ($DebugMessages -eq "1") {Write-Host "We need a point for our version-comparison. Changed" $version "to" $version".0"}
     $version = $version+".0"
-    exit
     }
 
 
@@ -137,7 +136,7 @@ function do_compare{
                     }
                     # Debug Info:
 				    if ($DebugMessages -eq "1") {Write-Host "Uninstallation of" $_.DisplayName "failed. MSI-Uninstallation returncode is:" $exitcode}
-                    # If none of the obove exitcodes apply, somthing went wrong and this script quits.
+                    # If none of the obove exitcodes apply, something went wrong and this script quits.
                     $exitcode=11005
                     endscript
 
